@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/janqii/pusher/global"
 	"github.com/janqii/pusher/server/router"
+	"github.com/janqii/pusher/transport"
 	"github.com/janqii/pusher/utils"
 	"log"
 	"net/http"
@@ -21,14 +22,15 @@ func Startable(cfg *PusherConfig) error {
 		log.Printf("init zkClient error: %v", err)
 		return err
 	}
+	defer zkClient.Close()
 
 	if global.KafkaClient, err = global.NewKafkaClient(zkClient); err != nil {
 		log.Printf("create kafka client error: %v", err)
 		return err
 	}
+	defer global.KafkaClient.Close()
 
 	var httpMux map[string]func(http.ResponseWriter, *http.Request)
-
 	httpMux = make(map[string]func(http.ResponseWriter, *http.Request))
 
 	httpServer := &HttpServer{
@@ -41,10 +43,18 @@ func Startable(cfg *PusherConfig) error {
 		RouterFunc:      router.ProxyServerRouter,
 		Wg:              wg,
 		Mux:             httpMux,
-		ZkClient:        zkClient,
 	}
 
 	httpServer.Startup()
+	defer httpServer.ShutDown()
+
+	fetcher := &transport.FetcherManager{}
+	fetcher.Startup()
+	defer fetcher.Shutdown()
+
+	pusher := &transport.PusherManager{}
+	pusher.Startup()
+	defer pusher.Shutdown()
 
 	log.Println("Pusher is running...")
 	wg.Wait()

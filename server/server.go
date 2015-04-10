@@ -1,7 +1,6 @@
 package server
 
 import (
-	"github.com/janqii/pusher/utils"
 	"log"
 	"net/http"
 	"sync"
@@ -18,12 +17,15 @@ type HttpServer struct {
 	RouterFunc      func(map[string]func(http.ResponseWriter, *http.Request))
 	Wg              *sync.WaitGroup
 	Mux             map[string]func(http.ResponseWriter, *http.Request)
-	ZkClient        *utils.ZK
 }
 
 func (s *HttpServer) Startup() {
 	s.Wg.Add(1)
 	go startupHttpServer(s)
+}
+
+func (s *HttpServer) ShutDown() {
+	shutdownHttpServer(s)
 }
 
 func startupHttpServer(hs *HttpServer) {
