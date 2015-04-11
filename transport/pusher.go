@@ -4,14 +4,14 @@ import (
 	"fmt"
 )
 
-type PusherManager struct {
+type PushManager struct {
 }
 
-func (p *PusherManager) Startup() error {
-	fmt.Println("PusherManager startup")
+func (p *PushManager) Startup() error {
+	fmt.Println("PushManager startup")
 	return nil
 }
 
-func (p *PusherManager) Shutdown() {
-	fmt.Println("PusherManager shutdown")
+func (p *PushManager) Shutdown() {
+	fmt.Println("PushManager shutdown")
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/janqii/pusher/admin"
 	"github.com/janqii/pusher/global"
 	"github.com/janqii/pusher/server/router"
 	"github.com/janqii/pusher/transport"
@@ -33,6 +34,10 @@ func Startable(cfg *PusherConfig) error {
 	var httpMux map[string]func(http.ResponseWriter, *http.Request)
 	httpMux = make(map[string]func(http.ResponseWriter, *http.Request))
 
+	subscribeManager := &admin.SubscribeManager{}
+	fetchManager := &transport.FetchManager{}
+	pushManager := &transport.PushManager{}
+
 	httpServer := &HttpServer{
 		Addr:            ":" + cfg.HttpServerPort,
 		Handler:         &HttpHandler{Mux: httpMux},
@@ -46,15 +51,16 @@ func Startable(cfg *PusherConfig) error {
 	}
 
 	httpServer.Startup()
-	defer httpServer.ShutDown()
+	defer httpServer.Shutdown()
 
-	fetcher := &transport.FetcherManager{}
-	fetcher.Startup()
-	defer fetcher.Shutdown()
+	fetchManager.Startup()
+	defer fetchManager.Shutdown()
 
-	pusher := &transport.PusherManager{}
-	pusher.Startup()
-	defer pusher.Shutdown()
+	pushManager.Startup()
+	defer pushManager.Shutdown()
+
+	subscribeManager.Startup()
+	defer subscribeManager.Shutdown()
 
 	log.Println("Pusher is running...")
 	wg.Wait()

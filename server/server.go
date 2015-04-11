@@ -24,7 +24,7 @@ func (s *HttpServer) Startup() {
 	go startupHttpServer(s)
 }
 
-func (s *HttpServer) ShutDown() {
+func (s *HttpServer) Shutdown() {
 	shutdownHttpServer(s)
 }
 

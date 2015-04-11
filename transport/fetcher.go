@@ -4,14 +4,14 @@ import (
 	"fmt"
 )
 
-type FetcherManager struct {
+type FetchManager struct {
 }
 
-func (f *FetcherManager) Startup() error {
-	fmt.Println("Fetcher startup")
+func (f *FetchManager) Startup() error {
+	fmt.Println("FetchManager startup")
 	return nil
 }
 
-func (f *FetcherManager) Shutdown() {
-	fmt.Println("Fetcher shutdown")
+func (f *FetchManager) Shutdown() {
+	fmt.Println("FetchManager shutdown")
 }
