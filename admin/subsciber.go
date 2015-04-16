@@ -1,7 +1,8 @@
 package admin
 
 import (
-	//"encoding/json"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/janqii/pusher/transport"
 	"github.com/janqii/pusher/utils"
@@ -64,12 +65,13 @@ type Subscriber struct {
 }
 
 type SubscribeManager struct {
-	zkClient      *utils.ZK
-	subscriberMap map[string]*Subscriber
-	subscriberNum int
-	mFetcher      *transport.FetchManager
-	mPusher       *transport.PushManager
-	wg            sync.WaitGroup
+	ZkClient      *utils.ZK
+	ZkChroot      string
+	SubscriberMap map[string]*Subscriber
+	SubscriberNum int
+	FetcherM      *transport.FetchManager
+	PusherM       *transport.PushManager
+	Wg            *sync.WaitGroup
 }
 
 func (m *SubscribeManager) Startup() error {
@@ -78,6 +80,28 @@ func (m *SubscribeManager) Startup() error {
 }
 
 func (m *SubscribeManager) AddItem(name string, cfg SubscriberConfig) error {
+	sb := Subscriber{
+		Version: 1,
+		Config:  cfg,
+	}
+
+	sbBytes, err := json.Marshal(sb)
+	if err != nil {
+		return nil
+	}
+
+	nodePath := fmt.Sprintf("%s/pusher/subscriber/%s", m.ZkChroot, name)
+	isExists, err := m.ZkClient.Exists(nodePath)
+	if err != nil {
+		return err
+	} else if isExists == true {
+		return errors.New("subscriber node already exists")
+	}
+
+	if err := m.ZkClient.Create(nodePath, sbBytes, true); err != nil {
+		return err
+	}
+
 	return nil
 }
 

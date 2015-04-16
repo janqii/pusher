@@ -34,9 +34,17 @@ func Startable(cfg *PusherConfig) error {
 	var httpMux map[string]func(http.ResponseWriter, *http.Request)
 	httpMux = make(map[string]func(http.ResponseWriter, *http.Request))
 
-	subscribeManager := &admin.SubscribeManager{}
 	fetchManager := &transport.FetchManager{}
 	pushManager := &transport.PushManager{}
+	global.SubsManager = &admin.SubscribeManager{
+		ZkClient:      zkClient,
+		ZkChroot:      cfg.ZookeeperChroot,
+		SubscriberMap: make(map[string]*admin.Subscriber),
+		SubscriberNum: 0,
+		FetcherM:      fetchManager,
+		PusherM:       pushManager,
+		Wg:            wg,
+	}
 
 	httpServer := &HttpServer{
 		Addr:            ":" + cfg.HttpServerPort,
@@ -59,7 +67,7 @@ func Startable(cfg *PusherConfig) error {
 	pushManager.Startup()
 	defer pushManager.Shutdown()
 
-	subscribeManager.Startup()
+	global.SubManager.Startup()
 	defer subscribeManager.Shutdown()
 
 	log.Println("Pusher is running...")
